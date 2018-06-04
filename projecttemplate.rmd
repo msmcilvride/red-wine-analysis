@@ -15,6 +15,8 @@ Red Wine Analysis by M. McIlvride
 library(ggplot2)
 library(GGally)
 library(gridExtra)
+library(tidyr)
+library(purrr)
 library(dplyr)
 ```
 
@@ -43,7 +45,7 @@ df2 <- subset(df,
                                        probs = 0.99))
 
 # remove the label column
-df2 <- subset(df2, select = -1)
+df2 <- subset(df2, select = -c(X))
 ```
 
 # Introduction
@@ -52,12 +54,26 @@ use data to draw conclusions about what really makes a good red wine.
 
 # Univariate Plots Section
 
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_Boxplots}
+df2 %>%
+  gather() %>%
+  ggplot(aes(x = '', y = value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_boxplot()
+```
+
+A quick look at a boxplot matrix of our data shows that our data is generally
+skewed right. We can also see that some of our variables, like chlorides and
+residual sugar, have very low spread and many outliers. Viewing the data in this
+way helps us see what sort of units each variable uses.
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Quality}
-qplot(data = df,
-      x = quality,
-      main = "Red Wines by Quality",
-      xlab = "Quality",
-      ylab = "Count")
+ggplot(aes(x = factor(quality)),
+       data = df2) +
+  geom_bar() +
+  labs(title = "Red Wines by Quality",
+       x = "Quality",
+       y = "Count")
 ```
 
 The quality of the wines has a fairly normal distribution. The average wine has
@@ -65,22 +81,48 @@ a quality of 5.64. Later, we will perform more advanced analysis to find out
 what factors contribute to a high quality.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Alcohol}
-qplot(data = df,
-      x = alcohol,
-      main = "Red Wines by Alcohol Content",
-      xlab = "Alcohol (% by volume)",
-      ylab = "Count")
+alcohol <-
+  ggplot(data = df2,
+         aes(x = alcohol)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Alcohol Content",
+         x = "Alcohol (% by volume)",
+         y = "Count")
+
+alcohol_log10 <-
+  ggplot(data = df2,
+         aes(x = alcohol)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Alcohol Content (log10)",
+         x = "Alcohol (% by volume)",
+         y = "Count") +
+    scale_x_log10()
+
+grid.arrange(alcohol, alcohol_log10, ncol = 1)
 ```
 
 The alcohol content of red wine is skewed right; the average bottle of red wine
 is 10.42% alcohol but it can be as high as 14.9%.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Sulphates}
-qplot(data = df,
-      x = sulphates,
-      main = "Red Wines by Sulphates",
-      xlab = "Sulphates (potassium sulphate = g / dm3)",
-      ylab = "Count")
+sulphates <-
+  ggplot(data = df2,
+         aes(x = sulphates)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Sulphates",
+         x = "Sulphates (potassium sulphate - g / dm3)",
+         y = "Count")
+
+sulphates_log10 <-
+  ggplot(data = df2,
+       aes(x = sulphates)) +
+  geom_histogram() +
+  labs(title = "Red Wines by Sulphates (log10)",
+       x = "Sulphates (potassium sulphate - g / dm3)",
+       y = "Count") +
+  scale_x_log10()
+
+grid.arrange(sulphates, sulphates_log10)
 ```
 
 The sulphate content of red wine is also skewed heavily right. The average
@@ -109,11 +151,24 @@ The density of red wine is also normally distributed with an average density of
 0.97.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Total_Sulfur_Dioxide}
-qplot(data = df,
-      x = total.sulfur.dioxide,
-      main = "Red Wines by Total Sulfur Dioxide",
-      xlab = "Total Sulfur Dioxide (mg / dm^3)",
-      ylab = "Count")
+total.sulfur.dioxide <-
+  ggplot(data = df2,
+         aes(x = total.sulfur.dioxide)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Total Sulfur Dioxide",
+         x = "Total Sulfur Dioxide (mg / dm^3)",
+         y = "Count")
+
+total.sulfur.dioxide_log10 <-
+  ggplot(data = df2,
+         aes(x = total.sulfur.dioxide)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Total Sulfur Dioxide (log10)",
+         x = "Total Sulfur Dioxide (mg / dm^3)",
+         y = "Count") +
+  scale_x_log10()
+
+grid.arrange(total.sulfur.dioxide, total.sulfur.dioxide_log10, ncol = 1)
 ```
 
 Total sulfur dioxide for red wine is skewed right with an average of 46.47.
@@ -124,17 +179,49 @@ qplot(data = df,
       main = "Red Wines by Free Sulfur Dioxide",
       xlab = "Free Sulfur Dioxide (mg / dm^3)",
       ylab = "Count")
+
+free.sulfur.dioxide <-
+  ggplot(data = df2,
+         aes(x = free.sulfur.dioxide)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Free Sulfur Dioxide",
+         x = "Free Sulfur Dioxide (mg / dm^3)",
+         y = "Count")
+
+free.sulfur.dioxide_log10 <-
+  ggplot(data = df2,
+         aes(x = free.sulfur.dioxide)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Free Sulfur Dioxide (log10)",
+         x = "Free Sulfur Dioxide (mg / dm^3)",
+         y = "Count") +
+  scale_x_log10()
+
+grid.arrange(free.sulfur.dioxide, free.sulfur.dioxide_log10, ncol = 1)
 ```
 
 Free sulfur dioxide is similarly shaped to total sulfur dioxide, but with a
 much lower average of 15.87.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Chlorides}
-qplot(data = df,
-      x = chlorides,
-      main = "Red Wines by Chlorides",
-      xlab = "Chlorides (sodium chloride - g / dm^3)",
-      ylab = "Count")
+chlorides <-
+  ggplot(data = df2,
+         aes(x = chlorides)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Chlorides",
+         x = "Chlorides (sodium chloride - g / dm^3)",
+         y = "Count")
+
+chlorides_log10 <-
+  ggplot(data = df2,
+         aes(x = chlorides)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Chlorides (log10)",
+         x = "Chlorides (sodium chloride - g / dm^3)",
+         y = "Count") +
+  scale_x_log10()
+
+grid.arrange(chlorides, chlorides_log10, ncol = 1)
 ```
 
 The data for chlorides in red wine is heavily skewed left and has a very long
@@ -142,11 +229,24 @@ tail. While the mean chloride count is 0.09, the median is 0.08 due to the long
 tail. The maximum value here is a massive 0.61.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Residual_Sugar}
-qplot(data = df,
-      x = residual.sugar,
-      main = "Red Wines by Residual Sugar",
-      xlab = "Residual Sugar (g / dm^3)",
-      ylab = "Count")
+residual.sugar <-
+  ggplot(data = df2,
+         aes(x = residual.sugar)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Residual Sugar",
+         x = "Residual Sugar (g / dm^3)",
+         y = "Count")
+
+residual.sugar_log10 <-
+  ggplot(data = df2,
+         aes(x = residual.sugar)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Residual Sugar (log10)",
+         x = "Residual Sugar (g / dm^3)",
+         y = "Count") +
+  scale_x_log10()
+
+grid.arrange(residual.sugar, residual.sugar_log10, ncol = 1)
 ```
 
 The data on residual sugar is very similar to the data on chlorides. The
@@ -158,16 +258,36 @@ qplot(data = df,
       main = "Red Wines by Citric Acid",
       xlab = "Citric Acid (g / dm^3)",
       ylab = "Count")
+
+citric.acid <-
+  ggplot(data = df2,
+         aes(x = citric.acid)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Citric Acid",
+         x = "Citric Acid (g / dm^3)",
+         y = "Count")
+
+citric.acid_log10 <-
+  ggplot(data = df2,
+         aes(x = citric.acid)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Citric Acid (log10)",
+         x = "Citric Acid (g / dm^3)",
+         y = "Count") +
+  scale_x_log10()
+
+grid.arrange(citric.acid, citric.acid_log10, ncol = 1)
 ```
 
 Citric acid levels in red wine are skewed left with an average level of 0.27.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Volatile_Acidity}
-qplot(data = df,
-      x = volatile.acidity,
-      main = "Red Wines by Volatile Acidity",
-      xlab = "Volatile Acidity (acetic acid = g / dm^3)",
-      ylab = "Count")
+ggplot(data = df2,
+       aes(x = volatile.acidity)) +
+  geom_histogram() +
+  labs(title = "Red Wines by Volatile Acidity",
+       x = "Volatile Acidity (acetic acid = g / dm^3)",
+       y = "Count")
 ```
 
 The volatile acidity of red wine is normally distributed with a slight left
@@ -179,6 +299,25 @@ qplot(data = df,
       main = "Red Wines by Fixed Acidity",
       xlab = "Fixed Acidity (tartaric acid = g / dm^3)",
       ylab = "Count")
+
+fixed.acidity <-
+  ggplot(data = df2,
+         aes(x = fixed.acidity)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Fixed Acidity",
+         x = "Fixed Acidity (tartaric acid = g / dm^3)",
+         y = "Count")
+
+fixed.acidity_log10 <-
+  ggplot(data = df2,
+         aes(x = fixed.acidity)) +
+    geom_histogram() +
+    labs(title = "Red Wines by Fixed Acidity (log10)",
+         x = "Fixed Acidity (tartaric acid = g / dm^3)",
+         y = "Count") +
+  scale_x_log10()
+
+grid.arrange(fixed.acidity, fixed.acidity_log10, ncol = 1)
 ```
 
 And finally, the fixed acidity of red wine is skewed left with an average value
@@ -212,16 +351,16 @@ each bottle of wine, which is not important in this investigation.
 # Bivariate Plots Section
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Pair_Plot}
-ggpairs(df2,
-        upper =  list(continuous = wrap(ggally_cor, size = 3,
-                                        color = "black")),
-        lower = list(continuous = wrap("points", color = "blue",
-                                       alpha = 0.1)),
-        diag = list(continuous = wrap("densityDiag",
-                                      color = "green",
-                                      alpha = 0.5))) +
-  theme(axis.text = element_text(size = 6),
-        axis.title = element_text(size = 6))
+ggcorr(data = df2,
+       method = c("all.obs", "spearman"),
+       nbreaks = 4,
+       palette = "PuOr",
+       label = TRUE,
+       name = "Spearman Correlation Coeff.(rho)",
+       hjust = 0.8,
+       angle = -45,
+       size = 2) +
+  ggtitle("Spearman Correlation Coefficient Matrix")
 ```
 
 First, we'll look at a paired plot of all the data. There really isn't anything
@@ -292,24 +431,29 @@ with several interesting correlations:
 fixed.acidity_citric.acid <-
 ggplot(df2,
        aes(x = fixed.acidity, y = citric.acid)) +
-  geom_point() +
+  geom_jitter(alpha = 0.3) +
   stat_smooth(geom = "smooth", color = "blue") +
   labs(x = "Fixed Acidity (tartaric acid - g / dm^3)",
-       y = "Citric Acid (g / dm^3)")
+       y = "Citric Acid (g / dm^3)") +
+  theme(axis.title = element_text(size = 8))
 
 fixed.acidity_density <-
 ggplot(df2,
        aes(x = fixed.acidity, y = density)) +
-  geom_point() +
+  geom_jitter(alpha = 0.3) +
   stat_smooth(geom = "smooth", color = "blue") +
-  labs(x = "Fixed Acidity (tartaric acid - g / dm^3)", y = "Density (g / cm^3)")
+  labs(x = "Fixed Acidity (tartaric acid - g / dm^3)",
+       y = "Density (g / cm^3)") +
+  theme(axis.title = element_text(size = 8))
 
 fixed.acidity_pH <-
 ggplot(df2,
        aes(x = fixed.acidity, y = pH)) +
-  geom_point() +
+  geom_jitter(alpha = 0.3) +
   stat_smooth(geom = "smooth", color = "blue") +
-  labs(x = "Fixed Acidity (tartaric acid - g / dm^3)", y = "pH")
+  labs(x = "Fixed Acidity (tartaric acid - g / dm^3)",
+       y = "pH") +
+  theme(axis.title = element_text(size = 8))
 
 grid.arrange(fixed.acidity_citric.acid,
              fixed.acidity_density,
@@ -351,13 +495,18 @@ of relationships we have to quality.
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Alcohol_Density_Quality}
 quality_alcohol_density <- 
 ggplot(data = df2,
-       aes(x = alcohol, y = density, color = quality)) +
-  geom_point() +
-  stat_ellipse(aes(x = alcohol, y = density, group = quality)) +
-  stat_smooth(method = "lm", col = "green") +
+       aes(x = alcohol, y = density)) +
+  geom_jitter(aes(color = factor(quality)), alpha = 0.7) +
+  stat_ellipse(aes(x = alcohol, y = density,
+                   group = factor(quality), color = factor(quality))) +
+  stat_smooth(method = "lm", col = "white") +
   labs(title = "Relationship Between Quality, Alcohol, and Density",
        x = "Alcohol (% by volume)",
-       y = "Density (g / cm^3)")
+       y = "Density (g / cm^3)") +
+  scale_color_brewer(type = "seq",
+                     palette = 4,
+                     guide = guide_legend(title = "Quality Levels")) +
+  theme_dark()
 
 quality_alcohol_density
 ```
@@ -391,38 +540,70 @@ alcohol and quality in relation to some other variables:
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Multivariate_Plots}
 quality_alcohol_volatile.acidity <-
 ggplot(data = df2,
-       aes(x = alcohol, y = volatile.acidity, color = quality)) +
-  geom_point() +
-  stat_ellipse(aes(x = alcohol, y = volatile.acidity, group = quality)) +
-  labs(x = "Alcohol (% by volume)", y = "Volatile Acidity")
+       aes(x = alcohol, y = volatile.acidity)) +
+  geom_jitter(aes(color = factor(quality)), alpha = 0.6) +
+  stat_ellipse(aes(x = alcohol, y = volatile.acidity,
+                   group = factor(quality), color = factor(quality))) +
+  labs(title = "Red Wine by Alcohol, Volatile Acidity, and Quality",
+       x = "Alcohol (% by volume)",
+       y = "Volatile Acidity (acetic acid - g / dm^3)") +
+  scale_color_brewer(type = "seq",
+                     palette = 4,
+                     guide = guide_legend(title = "Quality Levels")) +
+  theme_dark()
 
 quality_alcohol_sulphates <- 
 ggplot(data = df2,
-       aes(x = alcohol, y = sulphates, color = quality)) +
-  geom_point() +
-  stat_ellipse(aes(x = alcohol, y = sulphates, group = quality)) +
-  labs(x = "Alcohol (% by volume)", y = "Sulphates")
+       aes(x = alcohol, y = sulphates)) +
+  geom_jitter(aes(color = factor(quality)), alpha = 0.6) +
+  stat_ellipse(aes(x = alcohol, y = sulphates,
+                   group = factor(quality), color = factor(quality))) +
+  labs(title = "Red Wine by Alcohol, Sulphates, and Quality",
+       x = "Alcohol (% by volume)",
+       y = "Sulphates (potassium sulphate - g / dm3)") +
+  scale_color_brewer(type = "seq",
+                     palette = 4,
+                     guide = guide_legend(title = "Quality Levels")) +
+  theme_dark()
 
 quality_alcohol_total.sulfur.dioxide <-
   ggplot(data = df2,
-         aes(x = alcohol, y = total.sulfur.dioxide, color = quality)) +
-  geom_point() +
-  stat_ellipse(aes(x = alcohol, y = total.sulfur.dioxide, group = quality)) +
-  labs(x = "Alcohol (% by volume)", y = "Total Sulfur Dioxide")
+         aes(x = alcohol, y = total.sulfur.dioxide)) +
+  geom_jitter(aes(color = factor(quality)), alpha = 0.6) +
+  stat_ellipse(aes(x = alcohol, y = total.sulfur.dioxide,
+                   group = factor(quality), color = factor(quality))) +
+  labs(title = "Red Wine by Alcohol, Total Sulfur Dioxide, and Quality",
+       x = "Alcohol (% by volume)",
+       y = "Total Sulfur Dioxide (mg / dm^3)") +
+  scale_color_brewer(type = "seq",
+                     palette = 4,
+                     guide = guide_legend(title = "Quality Levels")) +
+  theme_dark()
 
 quality_alcohol_citric.acid <-
   ggplot(data = df2,
-         aes(x = alcohol, y = citric.acid, color = quality)) +
-  geom_point() +
-  stat_ellipse(aes(x = alcohol, y = citric.acid, group = quality)) +
-  labs(x = "Alcohol (% by volume)", y = "Citric Acid")
+         aes(x = alcohol, y = citric.acid)) +
+  geom_jitter(aes(color = factor(quality)), alpha = 0.6) +
+  stat_ellipse(aes(x = alcohol, y = citric.acid,
+                   group = factor(quality), color = factor(quality))) +
+  labs(title = "Red Wine by Alcohol, Citric Acid, and Quality",
+       x = "Alcohol (% by volume)",
+       y = "Citric Acid (g / dm^3)") +
+  scale_color_brewer(type = "seq",
+                     palette = 4,
+                     guide = guide_legend(title = "Quality Levels")) +
+  theme_dark()
+
   
-grid.arrange(quality_alcohol_volatile.acidity,
-             quality_alcohol_sulphates,
-             quality_alcohol_total.sulfur.dioxide,
-             quality_alcohol_citric.acid,
-             nrow = 2)
+quality_alcohol_volatile.acidity
+quality_alcohol_sulphates
+quality_alcohol_total.sulfur.dioxide
+quality_alcohol_citric.acid
+
+
 ```
+
+We will examine the relationships between these further in the next section.
 
 # Multivariate Analysis
 
